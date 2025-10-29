@@ -17,7 +17,7 @@ const initialBooks = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Science-Fiction",
   },
   {
@@ -29,7 +29,7 @@ const initialBooks = [
     read: false,
     favorite: false,
     rating: 4,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Dystopie",
   },
   {
@@ -41,7 +41,7 @@ const initialBooks = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Dystopie",
   },
   {
@@ -53,7 +53,7 @@ const initialBooks = [
     read: false,
     favorite: false,
     rating: 3,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Science-Fiction",
   },
   {
@@ -65,7 +65,7 @@ const initialBooks = [
     read: false,
     favorite: false,
     rating: 4,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Classique",
   },
   {
@@ -77,7 +77,7 @@ const initialBooks = [
     read: true,
     favorite: false,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Philosophique",
   },
   {
@@ -89,7 +89,7 @@ const initialBooks = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Fantasy",
   },
   {
@@ -101,7 +101,7 @@ const initialBooks = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Fantasy",
   },
   {
@@ -113,7 +113,7 @@ const initialBooks = [
     read: false,
     favorite: false,
     rating: 4,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Cyberpunk",
   },
   {
@@ -125,7 +125,7 @@ const initialBooks = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Conte philosophique",
   },
 ]
