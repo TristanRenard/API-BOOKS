@@ -1,11 +1,16 @@
-const express = require("express")
-const cors = require("cors")
+import { faker } from "@faker-js/faker"
+import cors from "cors"
+import express from "express"
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
 app.use(cors())
 app.use(express.json())
+
+const coverWidth = 400
+const coverHight = 600
+const getCoverImage = () => faker.image.url({ category: "books", width: coverWidth, height: coverHight })
 
 const initialBooks = [
   {
@@ -130,14 +135,7 @@ const initialBooks = [
   },
 ]
 
-/**
- * 📚 Jeu de données initial enrichi
- * Inclut des genres, auteurs variés, statuts, ratings, favoris et thèmes
- */
-let books = [...initialBooks]
-
-// 🗒️ Notes liées
-let notes = [
+const initialNotes = [
   {
     id: 1,
     bookId: 1,
@@ -187,6 +185,18 @@ let notes = [
     dateISO: new Date("2024-07-21").toISOString(),
   },
 ]
+
+/**
+ * 📚 Jeu de données initial enrichi
+ * Inclut des genres, auteurs variés, statuts, ratings, favoris et thèmes
+ */
+let books = [...initialBooks].map((book) => ({
+  ...book,
+  cover: getCoverImage()
+}))
+
+// 🗒️ Notes liées
+let notes = [...initialNotes]
 
 let nextBookId = books.length + 1
 let nextNoteId = notes.length + 1
@@ -365,6 +375,18 @@ app.get("/stats", (req, res) => {
 // 🔄 RESET DATA
 app.post("/reset", (req, res) => {
   books = [...initialBooks]
+  nextBookId = 11
+  nextNoteId = 9
+  res.json({
+    message: "Données en mémoire remises à zéro (jeu enrichi conservé).",
+  })
+})
+
+app.post("/resetWithFaker", (req, res) => {
+  books = [...initialBooks].map((book) => ({
+    ...book,
+    cover: getCoverImage()
+  }))
   nextBookId = 11
   nextNoteId = 9
   res.json({
