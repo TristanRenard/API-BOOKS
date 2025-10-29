@@ -375,6 +375,7 @@ app.get("/stats", (req, res) => {
 // 🔄 RESET DATA
 app.post("/reset", (req, res) => {
   books = [...initialBooks]
+  notes = [...initialNotes]
   nextBookId = 11
   nextNoteId = 9
   res.json({
@@ -387,6 +388,7 @@ app.post("/resetWithFaker", (req, res) => {
     ...book,
     cover: getCoverImage()
   }))
+  notes = [...initialNotes]
   nextBookId = 11
   nextNoteId = 9
   res.json({
