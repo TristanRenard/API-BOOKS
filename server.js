@@ -134,7 +134,7 @@ const initialBooks = [
  * 📚 Jeu de données initial enrichi
  * Inclut des genres, auteurs variés, statuts, ratings, favoris et thèmes
  */
-let books = initialBooks
+let books = [...initialBooks]
 
 // 🗒️ Notes liées
 let notes = [
@@ -364,7 +364,7 @@ app.get("/stats", (req, res) => {
 
 // 🔄 RESET DATA
 app.post("/reset", (req, res) => {
-  books = initialBooks
+  books = [...initialBooks]
   nextBookId = 11
   nextNoteId = 9
   res.json({
