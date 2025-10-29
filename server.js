@@ -1,11 +1,17 @@
 const express = require("express");
 const cors = require("cors");
+const { faker } = require("@faker-js/faker");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+
+const coverWidth = 400;
+const coverHight = 600;
+const getCoverImage = () => faker.image.url({ category: "books", width: coverWidth, height: coverHight });
 
 /**
  * 📚 Jeu de données initial enrichi
@@ -21,7 +27,7 @@ let books = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Science-Fiction",
   },
   {
@@ -33,7 +39,7 @@ let books = [
     read: false,
     favorite: false,
     rating: 4,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Dystopie",
   },
   {
@@ -45,7 +51,7 @@ let books = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Dystopie",
   },
   {
@@ -57,7 +63,7 @@ let books = [
     read: false,
     favorite: false,
     rating: 3,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Science-Fiction",
   },
   {
@@ -69,7 +75,7 @@ let books = [
     read: false,
     favorite: false,
     rating: 4,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Classique",
   },
   {
@@ -81,7 +87,7 @@ let books = [
     read: true,
     favorite: false,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Philosophique",
   },
   {
@@ -93,7 +99,7 @@ let books = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Fantasy",
   },
   {
@@ -105,7 +111,7 @@ let books = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Fantasy",
   },
   {
@@ -117,7 +123,7 @@ let books = [
     read: false,
     favorite: false,
     rating: 4,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Cyberpunk",
   },
   {
@@ -129,7 +135,7 @@ let books = [
     read: true,
     favorite: true,
     rating: 5,
-    cover: null,
+    cover: getCoverImage(),
     theme: "Conte philosophique",
   },
 ];

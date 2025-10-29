@@ -8,10 +8,17 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": ["express", "react-native", "booklist", "api", "evaluation"],
+  "keywords": [
+    "express",
+    "react-native",
+    "booklist",
+    "api",
+    "evaluation"
+  ],
   "author": "Enseignant",
   "license": "MIT",
   "dependencies": {
+    "@faker-js/faker": "^10.1.0",
     "cors": "^2.8.5",
     "express": "^4.19.2"
   },
