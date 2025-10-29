@@ -18,9 +18,12 @@
   "author": "Enseignant",
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.919.0",
     "@faker-js/faker": "^10.1.0",
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "dotenv": "^17.2.3",
+    "express": "^4.19.2",
+    "multer": "^2.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

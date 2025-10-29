@@ -1,6 +1,12 @@
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { faker } from "@faker-js/faker"
 import cors from "cors"
+import crypto from "crypto"
+import dotenv from "dotenv"
 import express from "express"
+import multer from "multer"
+
+dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -8,13 +14,43 @@ const PORT = process.env.PORT || 3000
 app.use(cors())
 app.use(express.json())
 
+// Configuration S3
+const s3Client = new S3Client({
+  endpoint: process.env.S3_ENDPOINT,
+  region: process.env.S3_REGION || "us-east-1",
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY || "",
+    secretAccessKey: process.env.S3_SECRET_KEY || "",
+  },
+  forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
+})
+
+const S3_BUCKET = process.env.S3_BUCKET || "book-covers"
+const S3_PUBLIC_URL = process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT
+
+// Configuration Multer pour stocker en mémoire
+const storage = multer.memoryStorage()
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB max
+  },
+  fileFilter: (_req, file, cb) => {
+    const allowedMimes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true)
+    } else {
+      cb(new Error("Type de fichier non autorisé. Seules les images sont acceptées."))
+    }
+  },
+})
+
 const coverWidth = 400
 const coverHight = 600
 const getCoverImage = () => faker.image.url({ category: "books", width: coverWidth, height: coverHight })
 
 const initialBooks = [
   {
-    id: 1,
     name: "Dune",
     author: "Frank Herbert",
     editor: "Chilton Books",
@@ -26,7 +62,6 @@ const initialBooks = [
     theme: "Science-Fiction",
   },
   {
-    id: 2,
     name: "Le Meilleur des mondes",
     author: "Aldous Huxley",
     editor: "Chatto & Windus",
@@ -38,7 +73,6 @@ const initialBooks = [
     theme: "Dystopie",
   },
   {
-    id: 3,
     name: "1984",
     author: "George Orwell",
     editor: "Secker & Warburg",
@@ -50,7 +84,6 @@ const initialBooks = [
     theme: "Dystopie",
   },
   {
-    id: 4,
     name: "Fondation",
     author: "Isaac Asimov",
     editor: "Gnome Press",
@@ -62,7 +95,6 @@ const initialBooks = [
     theme: "Science-Fiction",
   },
   {
-    id: 5,
     name: "Les Misérables",
     author: "Victor Hugo",
     editor: "A. Lacroix, Verboeckhoven & Cie",
@@ -74,7 +106,6 @@ const initialBooks = [
     theme: "Classique",
   },
   {
-    id: 6,
     name: "L'Étranger",
     author: "Albert Camus",
     editor: "Gallimard",
@@ -86,7 +117,6 @@ const initialBooks = [
     theme: "Philosophique",
   },
   {
-    id: 7,
     name: "Harry Potter à l'école des sorciers",
     author: "J.K. Rowling",
     editor: "Bloomsbury",
@@ -98,7 +128,6 @@ const initialBooks = [
     theme: "Fantasy",
   },
   {
-    id: 8,
     name: "Le Seigneur des Anneaux",
     author: "J.R.R. Tolkien",
     editor: "Allen & Unwin",
@@ -110,7 +139,6 @@ const initialBooks = [
     theme: "Fantasy",
   },
   {
-    id: 9,
     name: "Neuromancien",
     author: "William Gibson",
     editor: "Ace Books",
@@ -122,7 +150,6 @@ const initialBooks = [
     theme: "Cyberpunk",
   },
   {
-    id: 10,
     name: "Le Petit Prince",
     author: "Antoine de Saint-Exupéry",
     editor: "Reynal & Hitchcock",
@@ -137,71 +164,62 @@ const initialBooks = [
 
 const initialNotes = [
   {
-    id: 1,
     bookId: 1,
     content: "Un classique de la SF politique et écologique.",
     dateISO: new Date("2024-05-10").toISOString(),
   },
   {
-    id: 2,
     bookId: 1,
     content: "Très dense mais fascinant.",
     dateISO: new Date("2024-05-12").toISOString(),
   },
   {
-    id: 3,
     bookId: 3,
     content: "Une vision glaçante du totalitarisme.",
     dateISO: new Date("2024-04-01").toISOString(),
   },
   {
-    id: 4,
     bookId: 5,
     content: "Des descriptions magnifiques, mais parfois un peu longues.",
     dateISO: new Date("2024-03-14").toISOString(),
   },
   {
-    id: 5,
     bookId: 7,
     content: "Idéal pour les plus jeunes lecteurs, mais plaisant à tout âge.",
     dateISO: new Date("2024-02-02").toISOString(),
   },
   {
-    id: 6,
     bookId: 8,
     content: "Un univers légendaire, épique et intemporel.",
     dateISO: new Date("2024-01-20").toISOString(),
   },
   {
-    id: 7,
     bookId: 10,
     content: "Poétique, simple et profond à la fois.",
     dateISO: new Date("2024-06-15").toISOString(),
   },
   {
-    id: 8,
     bookId: 6,
-    content: "La philosophie de l’absurde à son sommet.",
+    content: "La philosophie de l'absurde à son sommet.",
     dateISO: new Date("2024-07-21").toISOString(),
   },
 ]
 
-/**
- * 📚 Jeu de données initial enrichi
- * Inclut des genres, auteurs variés, statuts, ratings, favoris et thèmes
- */
-let books = [...initialBooks].map((book) => ({
+let books = initialBooks.map((book, index) => ({
   ...book,
+  id: index + 1,
   cover: getCoverImage()
 }))
 
-// 🗒️ Notes liées
-let notes = [...initialNotes]
+let notes = initialNotes.map((note, index) => ({
+  ...note,
+  id: index + 1,
+}))
 
 let nextBookId = books.length + 1
 let nextNoteId = notes.length + 1
 
-// 🛠️ Fonctions utilitaires
+// Fonctions utilitaires
 const clampRating = (val) => {
   if (val == null) return null
   const n = Number(val)
@@ -216,19 +234,13 @@ const toBool = (v) => {
 }
 
 const normalizeBookInput = (payload, existing = {}) => ({
-  name: payload.name ?? existing.name,
-  author: payload.author ?? existing.author,
-  editor: payload.editor ?? existing.editor,
-  year: payload.year != null ? Number(payload.year) : existing.year,
+  name: payload.name ?? existing.name ?? "",
+  author: payload.author ?? existing.author ?? "",
+  editor: payload.editor ?? existing.editor ?? "",
+  year: payload.year != null ? Number(payload.year) : existing.year ?? 0,
   read: payload.read != null ? toBool(payload.read) : existing.read ?? false,
-  favorite:
-    payload.favorite != null
-      ? toBool(payload.favorite)
-      : existing.favorite ?? false,
-  rating:
-    payload.rating != null
-      ? clampRating(payload.rating)
-      : existing.rating ?? null,
+  favorite: payload.favorite != null ? toBool(payload.favorite) : existing.favorite ?? false,
+  rating: payload.rating != null ? clampRating(payload.rating) : existing.rating ?? null,
   cover: payload.cover != null ? String(payload.cover) : existing.cover ?? null,
   theme: payload.theme != null ? String(payload.theme) : existing.theme ?? null,
 })
@@ -240,12 +252,48 @@ const validateBookRequired = (b) => {
   return null
 }
 
-// 📘 ROUTES LIVRES CRUD
+// ENDPOINT UPLOAD
+app.post("/upload", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "Aucun fichier fourni" })
+    }
+
+    const file = req.file
+    const fileExtension = file.originalname.split(".").pop() || "jpg"
+    const fileName = `${crypto.randomUUID()}.${fileExtension}`
+
+    const command = new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: fileName,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    })
+
+    await s3Client.send(command)
+
+    const fileUrl = `${S3_PUBLIC_URL}/${S3_BUCKET}/${fileName}`
+
+    res.status(201).json({
+      message: "Image uploadée avec succès",
+      url: fileUrl,
+      fileName,
+    })
+  } catch (error) {
+    console.error("Erreur lors de l'upload:", error)
+    res.status(500).json({
+      error: "Erreur lors de l'upload du fichier",
+      details: error instanceof Error ? error.message : "Erreur inconnue"
+    })
+  }
+})
+
+// ROUTES LIVRES CRUD
 app.get("/books", (req, res) => {
   let result = [...books]
   const { q, author, read, favorite, theme, sort, order } = req.query
 
-  if (q) {
+  if (q && typeof q === "string") {
     const s = q.toLowerCase()
     result = result.filter(
       (b) =>
@@ -254,7 +302,7 @@ app.get("/books", (req, res) => {
     )
   }
 
-  if (author)
+  if (author && typeof author === "string")
     result = result.filter(
       (b) => b.author.toLowerCase() === author.toLowerCase()
     )
@@ -262,12 +310,12 @@ app.get("/books", (req, res) => {
     result = result.filter((b) => b.read === toBool(read))
   if (favorite !== undefined)
     result = result.filter((b) => b.favorite === toBool(favorite))
-  if (theme)
+  if (theme && typeof theme === "string")
     result = result.filter(
       (b) => (b.theme || "").toLowerCase() === theme.toLowerCase()
     )
 
-  if (sort) {
+  if (sort && typeof sort === "string") {
     const key =
       {
         title: "name",
@@ -325,7 +373,7 @@ app.delete("/books/:id", (req, res) => {
   res.json({ message: "Livre supprimé avec succès" })
 })
 
-// 🗒️ ROUTES NOTES
+// ROUTES NOTES
 app.get("/books/:id/notes", (req, res) => {
   const id = Number(req.params.id)
   if (!books.some((b) => b.id === id))
@@ -352,7 +400,7 @@ app.post("/books/:id/notes", (req, res) => {
   res.status(201).json(newNote)
 })
 
-// 📊 ROUTE STATS
+// ROUTE STATS
 app.get("/stats", (req, res) => {
   const totalBooks = books.length
   const readCount = books.filter((b) => b.read).length
@@ -360,7 +408,7 @@ app.get("/stats", (req, res) => {
   const favoritesCount = books.filter((b) => b.favorite).length
   const rated = books.filter((b) => b.rating != null)
   const averageRating = rated.length
-    ? rated.reduce((s, b) => s + b.rating, 0) / rated.length
+    ? rated.reduce((s, b) => s + (b.rating || 0), 0) / rated.length
     : 0
 
   res.json({
@@ -372,10 +420,16 @@ app.get("/stats", (req, res) => {
   })
 })
 
-// 🔄 RESET DATA
+// RESET DATA
 app.post("/reset", (req, res) => {
-  books = [...initialBooks]
-  notes = [...initialNotes]
+  books = initialBooks.map((book, index) => ({
+    ...book,
+    id: index + 1,
+  }))
+  notes = initialNotes.map((note, index) => ({
+    ...note,
+    id: index + 1,
+  }))
   nextBookId = 11
   nextNoteId = 9
   res.json({
@@ -384,11 +438,15 @@ app.post("/reset", (req, res) => {
 })
 
 app.post("/resetWithFaker", (req, res) => {
-  books = [...initialBooks].map((book) => ({
+  books = initialBooks.map((book, index) => ({
     ...book,
+    id: index + 1,
     cover: getCoverImage()
   }))
-  notes = [...initialNotes]
+  notes = initialNotes.map((note, index) => ({
+    ...note,
+    id: index + 1,
+  }))
   nextBookId = 11
   nextNoteId = 9
   res.json({
