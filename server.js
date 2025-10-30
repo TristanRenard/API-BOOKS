@@ -224,7 +224,8 @@ const clampRating = (val) => {
   if (val == null) return null
   const n = Number(val)
   if (Number.isNaN(n)) return null
-  return Math.max(0, Math.min(5, Math.round(n)))
+  const clamped = Math.max(0, Math.min(5, n))
+  return Math.round(clamped * 2) / 2
 }
 
 const toBool = (v) => {
